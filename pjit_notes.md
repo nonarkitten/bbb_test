@@ -136,8 +136,8 @@ The PJIT cache is populated by default with a routine which reads the
 the branch-and-link insutrction to the proper opcode. Before we go to
 the next 68K opcode, we'll execute this opcode immediately.
 
-When the replacement opcode is smaller than the ARM branch we can simply execute it in-place and omit both branches. While this would naively include all single ARM instruction opcodes, it actually includes many more. Extension words and operands are also part of the original instruction and in the thread table we replace all of these with NOPs; this allows for potentially much larger opcodes to get inlined.
+When the replacement opcode is smaller than the ARM branch we can simply execute it in-place and omit both branches. The most important of these is the branch -- when a branch is within the same L3 page, then we can always reduce this to one ARM instruction and inline it. Not other form of JIT is able to jump into random locations of memory! 
 
-The most important of these is the branch -- when a branch is within the same L3 page, then we can always reduce this to one ARM instruction and inline it. Not other form of JIT is able to jump into random locations of memory! 
+While this would naively include all single ARM instruction opcodes, it actually includes many more. Extension words and operands are also part of the original instruction and in the thread table we replace all of these with NOPs; this allows for potentially much larger opcodes to get inlined.
 
 Anyway, next time I'll compare PJIT to Emu68 in "Why is PJIT Slow?".
