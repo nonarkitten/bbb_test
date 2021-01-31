@@ -37,7 +37,7 @@ Our first improvement is to change the token-threading to subroutine-threading a
 This changes the above to:
 ```
   ...
-  b #offs                  ;@ Jump to opcode handler from our cache
+  bl #offs                 ;@ Jump to opcode handler from our cache
   ...
 
 ;@ ---------- [1000] move.b d0, d0 uses Op1000 ----------
@@ -65,7 +65,7 @@ Now we have the two halves of the MOVE operation. Much of the work here is decod
 Instead, we'll "unroll" this opcode handler for each and every register combination and only decode this once.
 ```
   ...
-  b #offs                  ;@ to get here...            
+  bl #offs                 ;@ to get here...            
   ...
 
 ;@ ---------- [1000] move.b d0, d0 uses Op1000 ----------
@@ -84,7 +84,7 @@ This substantially reduces the size of the individual opcode, but this does need
 
 I think that's looking a lot better! But if we don't need to set the flags because the next instruction does, then we can omit that entirely! This requires our opcode decode routine to be a little smarter.
 ```
-  b #offs                  ;@ to get here...            
+  bl #offs                 ;@ to get here...            
 
 ;@ ---------- [1000] move.b d0, d0 uses Op1000 ----------
 Op1000:
@@ -142,5 +142,7 @@ the next 68K opcode, we'll execute this opcode immediately.
 When the replacement opcode is smaller than the ARM branch we can simply execute it in-place and omit both branches. The most important of these is the branch -- when a branch is within the same cache page, then we can always reduce this to one ARM instruction and inline it. Not other form of JIT is able to jump into random locations of memory! 
 
 While this would naively include all single ARM instruction opcodes, it actually includes many more. Extension words and operands are also part of the original instruction and in the thread table we replace all of these with NOPs; this allows for potentially much larger opcodes to get inlined.
+
+Astute readers may wonder how we jump to the opcode lookup since PJIT exists in the CPU SRAM and the cache is in SDRAM -- far to distant from eachother in memory to branch to. Since it's used so often, we leave that address in a register. In fact, in PJIT, the CPU state is held just in front of this location, so one register can perform double duty (don't take the above 0 and 4 byte offsets as an indication that PJIT uses these offsets.)
 
 Anyway, next time I'll compare PJIT to Emu68 in "Why is PJIT Slow?".
