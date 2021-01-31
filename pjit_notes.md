@@ -94,6 +94,8 @@ Op1000:
 
   bx lr                    ;@ and return
 ```
+That's two cycles; an eleven-fold improvement!
+
 In many cases, flag setting is built into the arithmetic operation; move is rather unique here because it does not (nor cannot) set flags on the ARM processor. And since PJIT doesn't waste a precious register keeping a copy of the condition codes (except for the X flag), the worst-case for PJIT is only one more instruction.
 
 To know we can omit flag checking on opcodes that need the extra instruction, we have to look ahead to the next opcode(s) to see if they change the flags before they're used. The look-ahead can also be promblematic and since it's not a signifiant gain, we only ever scan one opcode ahead -- or more precisely, we replace prior opcodes with flagless variants on the next opcode if it updates the flags.
