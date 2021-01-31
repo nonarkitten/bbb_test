@@ -94,6 +94,9 @@ Op1000:
 
   bx lr                    ;@ and return
 ```
+In many cases, flag setting is built into the arithmetic operation; move is rather unique here because it does not (nor cannot) set flags on the ARM processor. And since PJIT doesn't waste a precious register keeping a copy of the condition codes (except for the X flag), the worst-case for PJIT is only one more instruction.
+
+To know we can omit flag checking on opcodes that need the extra instruction, we have to look ahead to the next opcode(s) to see if they change the flags before they're used. The look-ahead can also be promblematic and since it's not a signifiant gain, we only ever scan one opcode ahead -- or more precisely, we replace prior opcodes with flagless variants on the next opcode if it updates the flags.
 
 ## Instruction Inlining
 
@@ -136,7 +139,7 @@ The PJIT cache is populated by default with a routine which reads the
 the branch-and-link insutrction to the proper opcode. Before we go to
 the next 68K opcode, we'll execute this opcode immediately.
 
-When the replacement opcode is smaller than the ARM branch we can simply execute it in-place and omit both branches. The most important of these is the branch -- when a branch is within the same L3 page, then we can always reduce this to one ARM instruction and inline it. Not other form of JIT is able to jump into random locations of memory! 
+When the replacement opcode is smaller than the ARM branch we can simply execute it in-place and omit both branches. The most important of these is the branch -- when a branch is within the same cache page, then we can always reduce this to one ARM instruction and inline it. Not other form of JIT is able to jump into random locations of memory! 
 
 While this would naively include all single ARM instruction opcodes, it actually includes many more. Extension words and operands are also part of the original instruction and in the thread table we replace all of these with NOPs; this allows for potentially much larger opcodes to get inlined.
 
