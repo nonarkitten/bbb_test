@@ -1,0 +1,41 @@
+/* entry point of the program, first instruction executed */
+ENTRY(_asm_entry) 
+
+SECTIONS
+{
+	. = 0x82000000;
+/*	. = 0x402F0400; */
+	
+	. = ALIGN(4);
+	.text : {
+		obj/startup.o (INTERRUPT_VECTOR)
+		*(.text)
+	}
+	
+	/* non-zero global and static variables initialized by the application code */
+	. = ALIGN(4);
+	.data : 
+	{
+		_data_start = .;
+		*(.data) 
+		. = ALIGN(4);
+		_data_end = .;
+	}
+	
+	/* global and static variable that are not initialized by the application code. */
+	/* the compiler (hopefully) initialize this data to 0. */
+	.bss : 
+	{
+		_bss_start = .;
+		*(.bss COMMON)
+		. = ALIGN(4);
+		_bss_end = .;
+	}
+	
+	.stack :
+	{
+		_stack_end = .;  /* the danger zone! */
+		. = . + 0x1000; /* 4kB of stack memory */
+		_stack_top = .;  /* stack grows upwards */
+	}
+}
