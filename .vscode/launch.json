@@ -1,0 +1,39 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Cortex Debug",
+            "cwd": "${workspaceFolder}",
+            "executable": "./code.elf",
+            "device": "AM3358",
+            "request": "launch",
+            "type": "cortex-debug",
+            "breakAfterReset": true,
+            "serverArgs": [
+                "-select", "USB",
+                "-device", "AM3358",
+                "-endian", "big",
+                "-if", "JTAG",
+                "-speed", "auto",
+                "-ir", 
+                "-LocalhostOnly",
+                "-nologtofile"                
+            ],
+            "overrideLaunchCommands": [
+                "monitor reset",
+                "monitor halt",
+                "set $cpsr = 0",
+                "load",
+                "break main",
+                "jump Entry",
+            ],
+
+            // "runToEntryPoint": "main",
+            "interface": "jtag",
+            "servertype": "jlink"
+        }        
+    ]
+}

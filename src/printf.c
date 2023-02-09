@@ -4,14 +4,66 @@
 #include <stdio.h>
 
 /* Address of the BBB primary UART */
-#define  UART            (0x44E09000)
+#define  UART0            (0x44E09000)
+
+#define UART0_DLL  *(volatile uint8_t*)(UART0 + 0x00)
+#define UART0_DLH  *(volatile uint8_t*)(UART0 + 0x04)
+
+#define UART0_IER  *(volatile uint8_t*)(UART0 + 0x04)
+#define UART0_IIR  *(volatile uint8_t*)(UART0 + 0x08)
+#define UART0_LCR  *(volatile uint8_t*)(UART0 + 0x0C)
+#define UART0_MCR  *(volatile uint8_t*)(UART0 + 0x10)
+#define UART0_MDR1 *(volatile uint8_t*)(UART0 + 0x20)
+#define UART0_SYSC *(volatile uint8_t*)(UART0 + 0x54)
+#define UART0_SYSS *(volatile uint8_t*)(UART0 + 0x58)
+
+#define CM_WKUP_UART0_CLKCTRL *(volatile uint8_t*)(0x44E004B4)
+#define CM_WKUP_UART0_CLKCTRL_S *(volatile uint8_t*)(0x44E004B6)
+#define CONF_UART0_RXD *(volatile uint8_t*)(0x44E10970)
+#define CONF_UART0_TXD *(volatile uint8_t*)(0x44E10974)
+
+void UART0Init(int baud) {
+    /*Enable Func Clock*/
+    CM_WKUP_UART0_CLKCTRL = 0x02;
+    /*Wait clocks to get active*/
+    while(CM_WKUP_UART0_CLKCTRL_S);
+
+    // PAD_CONTROL_RXACTIVE | PAD_CONTROL_PULLUP
+    CONF_UART0_RXD = 0x70;
+    CONF_UART0_TXD = 0x58;
+
+    /*Reset UART*/
+	UART0_SYSC = 0x01;
+	while(!(UART0_SYSS & 0x01));
+
+    float div = 48000000.0f/(16.0f*(float)baud);
+    unsigned int intdiv = (unsigned int) div;
+
+	UART0_IER  = 0x00;         // Disable interrupts
+    UART0_MDR1 = 0x07;         // Disable mode select
+
+    UART0_LCR =  0xBF;         // Divisor latch enable, access DLL DHL, set UART as 8bit
+    UART0_DLL =  0x00;         // DLL = 0
+    UART0_DLH =  0x00;         // DLH = 0
+    UART0_LCR =  0x03;         // Set UART 8-bit
+
+    UART0_MCR =  0x03;         // Force /rts & /drt to active (low)
+    UART0_IIR =  0x07;         // Clear FIFOs and enable them
+
+    UART0_LCR =  0xBF;         // Divisor latch enable, access DLL DHL, set UART as 8bit
+    UART0_DLL =  (intdiv & 0xFF);         // DLL = 0
+    UART0_DLH =  ((intdiv >> 8) & 0x3F);         // DLH = 0
+    UART0_LCR =  0x03;         // Set UART 8-bit
+
+    UART0_MDR1 = 0;            // UART 16x oversampleing
+}
 
 static const char* l_base_chars = "0123456789abcdef";
 static const char* u_base_chars = "0123456789ABCDEF";
 
 static void writeUART(int c) {
-	while(*((volatile uint8_t*)(UART + 0x68)) >= 63) continue;	
-	*(volatile uint8_t*)UART = (uint8_t)c;
+	while(*((volatile uint8_t*)(UART0 + 0x68)) >= 63) continue;	
+	*(volatile uint8_t*)UART0 = (uint8_t)c;
 }
 
 static void printUART(int c) {

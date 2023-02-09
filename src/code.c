@@ -4,9 +4,13 @@
 #define  LED_PATTERN     0x1
 
 #define UINT_PTR 				 uint32_t*
-#define write32(ADDR,VAL) 		*((UINT_PTR)(ADDR))=(__builtin_bswap32(VAL))
-#define clrbits_le32(ADDR,MASK) *((UINT_PTR)(ADDR))&=~(__builtin_bswap32(MASK))
-#define setbits_le32(ADDR,MASK) *((UINT_PTR)(ADDR))|=(__builtin_bswap32(MASK))
+
+// #define LE(...) (__VA_ARGS__)
+#define LE(...) __builtin_bswap32(__VA_ARGS__)
+
+#define write32(ADDR,VAL) 		*((UINT_PTR)(ADDR))=(LE(VAL))
+#define clrbits_le32(ADDR,MASK) *((UINT_PTR)(ADDR))&=~(LE(MASK))
+#define setbits_le32(ADDR,MASK) *((UINT_PTR)(ADDR))|=(LE(MASK))
 
 // load mmc 1:2 0x98000000 /home/root/test/code.bin; go 0x98000000 
  

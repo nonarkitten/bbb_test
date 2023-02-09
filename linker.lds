@@ -1,15 +1,15 @@
 /* entry point of the program, first instruction executed */
-ENTRY(main) 
+ENTRY(Entry) 
 
 SECTIONS
 {
-	. = 0x98000000;
+	. = 0x402f0400;
 		
 	. = ALIGN(32);
 	.text : { 
 		*(.startup)
         *(.rodata)
-		*(.text)        
+		*(.text*)        
 	}
 	
 	/* non-zero global and static variables initialized by the application code */
